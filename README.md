@@ -2,12 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/arsc.svg)](https://badge.fury.io/py/arsc)
 
-**ARSC** (**A**mino-acid **R**esidue **S**toichiometry **C**alculator) is a lightweight command-line tool for quantifying elemental stoichiometry from protein FASTA files. It calculates the number of nitrogen (N), carbon (C), and sulfur (S) atoms contained in amino-acid side chains across all proteins, and also derives the average molecular weight of residues (AvgResMW). The tool is designed for fast batch processing and supports multiprocessing.
-
-- **N-ARSC**: Average number of nitrogen atoms per amino-acid residue side chain.
-- **C-ARSC**: Average number of carbon atoms per amino-acid residue side chain.
-- **S-ARSC**: Average number of sulfur atoms per amino-acid residue side chain.
-- AvgResMW: Average molecular weight of amino-acid residue side chains.
+**ARSC** (**A**mino-acid **R**esidue **S**toichiometry **C**alculator) is a lightweight command-line tool for quantifying elemental stoichiometry from protein FASTA files. It calculates the number of nitrogen (N), carbon (C), and sulfur (S) atoms contained in amino-acid side chains across all proteins, and also derives the average molecular weight of residues (AvgResMW).
 
 These metrics follow the definitions used in
 Mende et al., *Nature Microbiology*, (2017). https://doi.org/10.1038/s41564-017-0008-3
@@ -66,10 +61,15 @@ ARSC -i input_dir/ -t 4 | sort -k2,2nr
 
 - Input directory must contain one or more amino-acid sequence fasta (`*.faa` or `*.faa.gz`) files
 
-### Output format
+### Output
 - stdout
-- TSV (-o or --output, optional)
-    - containing Genome, N_ARSC, C_ARSC, S_ARSC, and AvgResMW.
+- TSV file (via `-o` or `--output`, optional)
+
+Format columns: Genome, N_ARSC, C_ARSC, S_ARSC, AvgResMW
+    - N-ARSC — Average number of nitrogen atoms per amino-acid residue side chain.
+    - C-ARSC — Average number of carbon atoms per amino-acid residue side chain.
+    - S-ARSC — Average number of sulfur atoms per amino-acid residue side chain.
+    - AvgResMW — Average molecular weight of amino-acid residue side chains.
 
 ### Dependencies
 - Python >= 3.8
