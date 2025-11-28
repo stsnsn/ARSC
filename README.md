@@ -64,7 +64,8 @@ ARSC -i input_dir/ -t 4 | sort -k2,2nr
 - Input directory must contain one or more amino-acid sequence fasta (`*.faa` or `*.faa.gz`) files
 
 ### Output format
-- TSV
+- stdout
+- TSV (-o or --output, optional)
     - containing Genome, N_ARSC, C_ARSC, S_ARSC, and AvgResMW.
 
 ### Dependencies
