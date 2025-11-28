@@ -65,7 +65,7 @@ ARSC -i input_dir/ -t 4 | sort -k2,2nr
 - stdout
 - TSV file (via `-o` or `--output`, optional)
 
-Format columns: Genome, N_ARSC, C_ARSC, S_ARSC, AvgResMW
+Format columns: Genome, N_ARSC, C_ARSC, S_ARSC, AvgResMW <br>
     - N-ARSC — Average number of nitrogen atoms per amino-acid residue side chain.
     - C-ARSC — Average number of carbon atoms per amino-acid residue side chain.
     - S-ARSC — Average number of sulfur atoms per amino-acid residue side chain.
