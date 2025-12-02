@@ -2,9 +2,12 @@
 
 [![PyPI version](https://badge.fury.io/py/arsc.svg)](https://badge.fury.io/py/arsc)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17745555.svg)](https://doi.org/10.5281/zenodo.17745555)
-
+Visualization and retrieval of precomputed results can also be performed through [HERE](https://stsnsn.github.io/ARSC/).
 
 **ARSC** (**A**mino-acid **R**esidue **S**toichiometry **C**alculator) is a lightweight command-line tool for quantifying elemental stoichiometry from protein FASTA files. It calculates the number of nitrogen (N), carbon (C), and sulfur (S) atoms contained in amino-acid side chains across all proteins, and also derives the average molecular weight of residues (AvgResMW).
+
+
+
 
 These metrics follow the definitions used in
 Mende et al., *Nature Microbiology*, (2017). https://doi.org/10.1038/s41564-017-0008-3
