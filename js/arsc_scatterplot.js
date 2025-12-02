@@ -100,6 +100,10 @@ function getFilters() {
 					groupingLevel = LEVELS[deepest];
 				}
 				const groups = {};
+				// fixed marker size and opacity for consistent appearance
+				const FIXED_MARKER_SIZE = 10; // pixels for all points
+				// default opacity (alpha)
+				const DEFAULT_OPACITY = 0.5;
 				filtered.forEach(r => {
 					const key = r[groupingLevel] || 'unknown';
 					if (!groups[key]) groups[key] = { x: [], y: [], text: [], size: [] };
@@ -111,8 +115,8 @@ function getFilters() {
 					const idLine = r['id'] ? `id: ${r['id']}` : '';
 					const valLine = `${xField}: ${r[xField]}, ${yField}: ${r[yField]}`;
 					groups[key].text.push(`${idLine}<br>${taxHtml}<br>${valLine}`);
-					// marker size: sqrt(sum_len) scaled
-					const s = isNaN(r['sum_len']) ? 6 : Math.max(4, Math.sqrt(r['sum_len']) / 80);
+					// marker size: use fixed size for all points
+					const s = FIXED_MARKER_SIZE;
 					groups[key].size.push(s);
 				});
 
@@ -124,7 +128,8 @@ function getFilters() {
 					name: k,
 					text: groups[k].text,
 					hovertemplate: '%{text}<extra></extra>',
-					marker: { size: groups[k].size, sizemode: 'area', opacity: 0.8 }
+						// determine opacity based on whether any filters are active
+						marker: { size: groups[k].size, sizemode: 'area', opacity: (Object.keys(getFilters()).length > 0) ? 0.9 : DEFAULT_OPACITY }
 				}));
 
 						const layout = {
