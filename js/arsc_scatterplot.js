@@ -1,5 +1,5 @@
 // Path to the TSV file (relative)
-const TSV_PATH = 'data/arsc_gtdb_r207.tsv';
+const TSV_PATH = '../data/arsc_gtdb_r226rep.tsv';
 
 // DOM elements: use the searchable inputs as the main controls
 const selects = {
