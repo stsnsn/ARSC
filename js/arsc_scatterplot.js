@@ -125,7 +125,7 @@ function getFilters() {
 				}
 				const groups = {};
 				// default opacity (alpha) when no filters are applied; fallback if slider missing
-				const DEFAULT_OPACITY = 0.1;
+				const DEFAULT_OPACITY = 1.0;
 				filtered.forEach(r => {
 					const key = r[groupingLevel] || 'unknown';
 					if (!groups[key]) groups[key] = { x: [], y: [], text: [], size: [] };
@@ -315,8 +315,8 @@ function update() {
 				// reset marker size and alpha sliders to defaults if present
 				if (markerSizeInput) { markerSizeInput.value = 8; }
 				if (markerSizeVal) { markerSizeVal.textContent = markerSizeInput ? markerSizeInput.value : '8'; }
-				if (markerAlphaInput) { markerAlphaInput.value = 0.25; }
-				if (markerAlphaVal) { markerAlphaVal.textContent = markerAlphaInput ? parseFloat(markerAlphaInput.value).toFixed(2) : '0.10'; }
+				if (markerAlphaInput) { markerAlphaInput.value = 1.0; }
+				if (markerAlphaVal) { markerAlphaVal.textContent = markerAlphaInput ? parseFloat(markerAlphaInput.value).toFixed(2) : '1.00'; }
 				update();
 			});
 
