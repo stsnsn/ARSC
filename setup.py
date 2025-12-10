@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="arsc",
-    version="0.2.4",
+    version="0.3.0",
     packages=find_packages(),
     install_requires=["biopython>=1.79"],
     long_description=long_description,
@@ -17,7 +17,7 @@ setup(
     },
     author="Satoshi Nishino",
     author_email="satoshi-nishino@g.ecc.u-tokyo.ac.jp",
-    description="Compute ARSC (N/C/S/AvgResMW) from protein fasta files",
+    description="Compute ARSC (N/C/S) from protein fasta files",
     url="https://github.com/stsnsn/ARSC",
     license="GPL-2.0",
 )
