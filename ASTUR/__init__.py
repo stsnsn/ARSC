@@ -1,5 +1,5 @@
 # ASTUR/__init__.py
 from .core import process_faa, compute_ARSC_extended_counts
 
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 __author__ = "Satoshi Nishino"
