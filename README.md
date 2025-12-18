@@ -1,11 +1,10 @@
 # ASTUR
 
-[![PyPI version](https://badge.fury.io/py/arsc.svg)](https://badge.fury.io/py/arsc)
+[![PyPI version](https://badge.fury.io/py/arsc.svg)](https://badge.fury.io/py/astur)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17745555.svg)](https://doi.org/10.5281/zenodo.17745555)
 
-Visualization and retrieval of precomputed results can also be performed through [HERE](https://stsnsn.github.io/ARSC/).
 
-**ASTUR** (**A**RSC-based **ST**oichiometric **U**tility for **R**esource profiling) is a lightweight command-line tool for quantifying elemental stoichiometry from protein FASTA files. It calculates the number of nitrogen (N), carbon (C), and sulfur (S) atoms contained in amino-acid side chains across all proteins, and also derives the average molecular weight of residues (AvgResMW).
+**ASTUR** (**A**RSC-based **ST**oichiometric **U**tility for **R**esource profiling) is a lightweight command-line tool and [a web interface](https://stsnsn.github.io/ASTUR/) for quantifying elemental stoichiometry from protein FASTA files. It calculates the number of nitrogen (N), carbon (C), and sulfur (S) atoms contained in amino-acid side chains across proteins or proteomes.
 
 
 
@@ -17,7 +16,7 @@ Mende et al., *Nature Microbiology*, (2017). https://doi.org/10.1038/s41564-017-
 
 ## Features
 
-- Calculate elemental composition metrics (N-ARSC, C-ARSC, S-ARSC, AvgResMW) directly from protein FASTA files.
+- Calculate elemental composition metrics (N-ARSC, C-ARSC, S-ARSC) directly from protein FASTA files.
 - Multiprocessing support for fast and scalable analysis of large genome sets.
 - Simple CLI tool: one command to run, easy to combine with UNIX tools via pipes.
 
@@ -28,7 +27,7 @@ Mende et al., *Nature Microbiology*, (2017). https://doi.org/10.1038/s41564-017-
 ### From PyPI
 
 ```bash
-pip install arsc
+pip install astur
 ```
 
 ---
@@ -36,7 +35,7 @@ pip install arsc
 ## Usage
 
 ```bash
-ARSC -i <input> -o <output.tsv> -t <num_threads>
+ASTUR -i <input> -o <output.tsv> -t <num_threads>
 ```
 
 - `-v` or `--version` : show version
@@ -48,19 +47,19 @@ ARSC -i <input> -o <output.tsv> -t <num_threads>
 
 
 ### Example
-#### 1. Run ARSC on a `.faa` file.
+#### 1. Compute ARSC on a `.faa` file.
 ```bash
-ARSC -i E_coli.faa
+ASTUR -i E_coli.faa
 ```
 
 #### 2. Process all `.faa` / `.faa.gz` files in a directory using 4 threads and save results as `ARSC_output.tsv`
 ```bash
-ARSC -i input_dir/ -t 4 -o ARSC_output.tsv
+ASTUR -i input_dir/ -t 4 -o ARSC_output.tsv
 ```
 
 #### 3. Sort results by N-ARSC (descending) using pipe.
 ```bash
-ARSC -i input_dir/ -t 4 | sort -k2,2nr
+ASTUR -i input_dir/ -t 4 | sort -k2,2nr
 ```
 
 ### Input requirements
