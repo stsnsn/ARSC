@@ -69,7 +69,7 @@ def main():
     parser.add_argument("-o", "--output", help="Output TSV file w/ header. If omitted, print to stdout w/ header.")
     parser.add_argument("--no-header", action="store_true", help="Suppress header line in output")
     parser.add_argument("-t", "--threads", default=1, type=int, help="Number of threads")
-    parser.add_argument("-d", "--decimal-places", default=6, type=int, help="Number of decimal places for floating point values (default: 6)")
+    parser.add_argument("-d", "--decimal-places", default=6, type=int, help="Number of decimal places for floating point values")
     parser.add_argument("--min-length", type=int, help="Minimum amino acid length (filter results)")
     parser.add_argument("--max-length", type=int, help="Maximum amino acid length (filter results)")
     parser.add_argument("-s", "--stats", action="store_true", help="Output summary statistics to stdout")
