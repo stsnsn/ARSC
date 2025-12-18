@@ -43,7 +43,7 @@ function parseFASTAandComputeFast(text) {
   let validCharCount = 0; // count of header-excluded valid characters considered
   let nucleotideMatchCount = 0; // count of characters matching A/T/G/C/U/N
 
-  // 不明な文字の種類を記録するためのフラグ配列（ASCII範囲）
+  // 不明な文字の種類を記録（ASCII範囲）
   const unknownFlags = new Uint8Array(128);
 
   const len = text.length;

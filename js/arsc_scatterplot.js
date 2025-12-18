@@ -628,78 +628,76 @@ function setupPlotClickHandler() {
 					Object.values(selects).forEach(s => s.addEventListener('change', onSelectChange));
 					if (ySelect) ySelect.addEventListener('change', update);
 
-					// Wire search inputs (datalists) so selecting/typing a suggestion updates the control
-					Object.keys(selects).forEach(level => {
-						const input = selects[level];
-						if (!input) return;
-						input.addEventListener('change', (ev) => {
-							const v = ev.target.value;
-							const allowed = availableOptionsForLevel(level);
-							if (v && allowed.includes(v)) {
-								// set value (already set) and trigger change handling
-								onSelectChange({ target: input });
-							} else if (!v) {
-								input.value = '';
-								onSelectChange({ target: input });
-							} else {
-								// typed value not in allowed list -> ignore or clear
-								// keep it cleared to avoid inconsistent filtering
-								input.value = '';
-						}).then(text => {
-							const parsed = parseTSV(text);
-							header = parsed.header;
-							rows = parsed.data;
-							// initial population: set full option lists
-							LEVELS.forEach(l => {
-								const set = new Set(rows.map(r => r[l]).filter(Boolean));
-								const arr = Array.from(set).sort();
-								// populate datalist for the search input
-								setSelectOptions(selects[l], arr);
-							});
-							// ensure child options reflect any top-level defaults (none at start)
-							refreshAllOptions();
-							update();
-							// Setup click handler once after initial plot
-							setupPlotClickHandler();
-							if (loadingEl) loadingEl.style.display = 'none';
-						}).catch(err => {
-				removeUserSampleOverlay();
-				// restore the original upload UI and clear any displayed filename/text
-				restoreFastaContainer();
-				if (fastaFileInput) { try { fastaFileInput.value = ''; } catch (e) {} }
-				if (fastaNameSpan) fastaNameSpan.textContent = '';
-				update();
+				// Wire search inputs (datalists) so selecting/typing a suggestion updates the control
+				Object.keys(selects).forEach(level => {
+					const input = selects[level];
+					if (!input) return;
+					input.addEventListener('change', (ev) => {
+						const v = ev.target.value;
+						const allowed = availableOptionsForLevel(level);
+						if (v && allowed.includes(v)) {
+							// set value (already set) and trigger change handling
+							onSelectChange({ target: input });
+						} else if (!v) {
+							input.value = '';
+							onSelectChange({ target: input });
+						} else {
+							// typed value not in allowed list -> ignore or clear
+							// keep it cleared to avoid inconsistent filtering
+							input.value = '';
+							onSelectChange({ target: input });
+						}
+					});
+				});
+		resetBtn.addEventListener('click', () => {
+			// clear taxonomy filters
+			Object.values(selects).forEach(s => s.value = '');
+			// reset datalist options and redraw
+			refreshAllOptions();
+			// reset marker size and alpha sliders to defaults if present
+			if (markerSizeInput) { markerSizeInput.value = 8; }
+			if (markerSizeVal) { markerSizeVal.textContent = markerSizeInput ? markerSizeInput.value : '8'; }
+			if (markerAlphaInput) { markerAlphaInput.value = 1.0; }
+			if (markerAlphaVal) { markerAlphaVal.textContent = markerAlphaInput ? parseFloat(markerAlphaInput.value).toFixed(2) : '1.00'; }
+			// clear stored user sample and input UI as part of reset
+			userSample = null;
+			removeUserSampleOverlay();
+			// restore the original upload UI and clear any displayed filename/text
+			restoreFastaContainer();
+			if (fastaFileInput) { try { fastaFileInput.value = ''; } catch (e) {} }
+			if (fastaNameSpan) fastaNameSpan.textContent = '';
+			update();
+		});
+		
+		// Fetch TSV and initialize
+		try {
+			if (loadingEl) loadingEl.style.display = 'inline-block';
+		} catch (e) { /* ignore */ }
+		fetch(TSV_PATH).then(r => {
+			if (!r.ok) throw new Error('Failed to fetch TSV: ' + r.status);
+			return r.text();
+		}).then(text => {
+			const parsed = parseTSV(text);
+			header = parsed.header;
+			rows = parsed.data;
+			// initial population: set full option lists
+			LEVELS.forEach(l => {
+				const set = new Set(rows.map(r => r[l]).filter(Boolean));
+				const arr = Array.from(set).sort();
+				// populate datalist for the search input
+				setSelectOptions(selects[l], arr);
 			});
-
-			// Fetch TSV and initialize
-						try {
-							if (loadingEl) loadingEl.style.display = 'inline-block';
-						} catch (e) { /* ignore */ }
-						fetch(TSV_PATH).then(r => {
-							if (!r.ok) throw new Error('Failed to fetch TSV: ' + r.status);
-							return r.text();
-						}).then(text => {
-							const parsed = parseTSV(text);
-							header = parsed.header;
-							rows = parsed.data;
-							// initial population: set full option lists
-							LEVELS.forEach(l => {
-								const set = new Set(rows.map(r => r[l]).filter(Boolean));
-								const arr = Array.from(set).sort();
-								// populate datalist for the search input
-								setSelectOptions(selects[l], arr);
-							});
-							// ensure child options reflect any top-level defaults (none at start)
-							refreshAllOptions();
-							update();
-							if (loadingEl) loadingEl.style.display = 'none';
-						}).catch(err => {
-							if (loadingEl) loadingEl.style.display = 'none';
-							document.getElementById('plot').textContent = 'Error loading data: ' + err.message;
-							console.error(err);
-						});
-
-			// Build TSV string from filtered rows using header order
+			// ensure child options reflect any top-level defaults (none at start)
+			refreshAllOptions();
+			update();
+			// Setup click handler once after initial plot
+			setupPlotClickHandler();
+			if (loadingEl) loadingEl.style.display = 'none';
+		}).catch(err => {
+			if (loadingEl) loadingEl.style.display = 'none';
+			document.getElementById('plot').textContent = 'Error loading data: ' + err.message;
+			console.error(err);
+		});			// Build TSV string from filtered rows using header order
 			function buildTSVFromRows(filteredRows) {
 				if (!header || header.length === 0) {
 					// fall back to keys from first row
