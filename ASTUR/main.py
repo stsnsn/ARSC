@@ -67,12 +67,12 @@ def main():
     parser.add_argument("input", nargs="?", help="Positional input: .faa/.faa.gz file or directory (or use -i/--input_dir)")
     parser.add_argument("-a", "--aa-composition", action="store_true", help="Include amino acid composition ratios and total length in output")
     parser.add_argument("-o", "--output", help="Output TSV file w/ header. If omitted, print to stdout w/ header.")
+    parser.add_argument("--no-header", action="store_true", help="Suppress header line in output")
     parser.add_argument("-t", "--threads", default=1, type=int, help="Number of threads")
     parser.add_argument("-d", "--decimal-places", default=6, type=int, help="Number of decimal places for floating point values (default: 6)")
     parser.add_argument("--min-length", type=int, help="Minimum amino acid length (filter results)")
     parser.add_argument("--max-length", type=int, help="Maximum amino acid length (filter results)")
     parser.add_argument("-s", "--stats", action="store_true", help="Output summary statistics to stdout")
-    parser.add_argument("--no-header", action="store_true", help="Suppress header line in stdout output")
     parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {__version__}")
 
 
@@ -181,22 +181,26 @@ def main():
 
     # Output
     decimal_fmt = f"{{:.{args.decimal_places}f}}"
-    
+
     if args.output:
         with open(args.output, "w") as out:
             if args.aa_composition:
                 # Build header with all amino acids
                 from ASTUR.core import aa_dictionary
                 aa_keys = sorted(aa_dictionary.keys())
-                header = "File\tN_ARSC\tC_ARSC\tS_ARSC\tAvgResMW\t" + "\t".join(aa_keys) + "\tTotalAALength\n"
-                out.write(header)
+                # Write header unless --no-header is specified
+                if not args.no_header:
+                    header = "File\tN_ARSC\tC_ARSC\tS_ARSC\tAvgResMW\t" + "\t".join(aa_keys) + "\tTotalAALength\n"
+                    out.write(header)
                 for r in results:
                     if 'error' in r:
                         continue
                     aa_comp_values = [decimal_fmt.format(r['aa_composition'].get(aa, 0)) for aa in aa_keys]
                     out.write(f"{r['genome']}\t{decimal_fmt.format(r['N_ARSC'])}\t{decimal_fmt.format(r['C_ARSC'])}\t{decimal_fmt.format(r['S_ARSC'])}\t{decimal_fmt.format(r['MW_ARSC'])}\t" + "\t".join(aa_comp_values) + f"\t{r['total_aa_length']}\n")
             else:
-                out.write("File\tN_ARSC\tC_ARSC\tS_ARSC\tAvgResMW\n")
+                # Write header unless --no-header is specified
+                if not args.no_header:
+                    out.write("File\tN_ARSC\tC_ARSC\tS_ARSC\tAvgResMW\n")
                 for r in results:
                     if 'error' in r:
                         continue
