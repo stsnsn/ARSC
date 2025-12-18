@@ -28,7 +28,7 @@ The static web interface is available at [https://stsnsn.github.io/ASTUR/](https
 
 ## Standalone Package
 
-The standalone package is available at [https://pypi.org/project/astur/)](https://pypi.org/project/astur/)
+The standalone package is available at [https://pypi.org/project/astur/](https://pypi.org/project/astur/)
 
 **Features**
 - **Elemental stoichiometry calculation**: Calculate N-, C-, and S-ARSC directly from protein FASTA files or directories.
