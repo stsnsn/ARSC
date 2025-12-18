@@ -105,7 +105,7 @@ function addUserSampleOverlay() {
 		const yFieldCur = (ySelect && ySelect.value) ? ySelect.value : 'N_ARSC';
 		const yValCur = (userSample && userSample[yFieldCur] !== undefined) ? userSample[yFieldCur] : userSample.N_ARSC;
 		const existingShapes = (gd.layout && gd.layout.shapes) ? gd.layout.shapes.slice() : [];
-		const line = { type: 'line', xref: 'paper', x0: 0, x1: 1, yref: 'y', y0: yValCur, y1: yValCur, line: { color: 'red', width: 2, dash: 'dot' }, _userSample: true };
+		const line = { type: 'line', xref: 'paper', x0: 0, x1: 1, yref: 'y', y0: yValCur, y1: yValCur, line: { color: 'red', width: 2 }, _userSample: true };
 		Plotly.relayout('plot', { shapes: existingShapes.concat([line]) });
 		const existingAnns = (gd.layout && gd.layout.annotations) ? gd.layout.annotations.slice() : [];
 		const ann = { xref: 'paper', x: 0.99, xanchor: 'right', yref: 'y', y: yValCur, text: `${userSample.filename} — ${yFieldCur}: ${yValCur.toFixed(5)}`, bgcolor: '#fff8', bordercolor: '#ff3333', font: { color: '#800', size: 12 }, _userSample: true };
