@@ -108,7 +108,7 @@ astur -i test_data/ -t 3 --min-length 130 -p
 - stdout (if you need no header, use `--no-header` option)
 - TSV file (via `-o` or `--output`, optional)
 
-Default format columns: query, N_ARSC, C_ARSC, S_ARSC, AvgResMW <br>
+Default format columns: query, N_ARSC, C_ARSC, S_ARSC, AvgResMW, TotalLenghth <br>
 - N-ARSC — Average number of nitrogen atoms per amino-acid residue side chain.
 - C-ARSC — Average number of carbon atoms per amino-acid residue side chain.
 - S-ARSC — Average number of sulfur atoms per amino-acid residue side chain.
