@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="astur",
-    version="0.0.7",
+    version="0.1.0",
     packages=find_packages(),
     install_requires=["biopython>=1.79"],
     long_description=long_description,
