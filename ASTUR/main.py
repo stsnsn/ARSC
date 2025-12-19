@@ -15,10 +15,12 @@ Original citations for calculation metrics in Mende et al. 2017:
 
 import sys
 import argparse
+import os
 from multiprocessing import Pool
+from statistics import mean, stdev
 from ASTUR import __version__
 from ASTUR.utils import collect_faa_files, process_faa_auto
-
+from ASTUR.core import aa_dictionary
 
 ASTUR_LOGO = """
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;+;;xx+X;;;;;;;;;
@@ -60,44 +62,33 @@ d8'    88  88.    "'    88    88     88  88    `8b
 class CustomFormatter(argparse.RawTextHelpFormatter, argparse.ArgumentDefaultsHelpFormatter):
     pass
 
-
 def main():
-    parser = argparse.ArgumentParser(description=f"{ASTUR_LOGO}\n\nCompute ARSC from .faa/.faa.gz files\nUsage example:\n    astur Ecoli.faa.gz\n    astur -i input_directory/ -o output.tsv -a -t 4 --stats", formatter_class=CustomFormatter)
-    parser.add_argument("-i", "--input_dir", required=False, help="A faa or faa.gz file, or directory")
-    parser.add_argument("input", nargs="?", help="Positional input: .faa/.faa.gz file or directory (or use -i/--input_dir)")
-    parser.add_argument("-p", "--per-sequence", action="store_true", help="Process each sequence individually instead of the entire file")
-    parser.add_argument("-a", "--aa-composition", action="store_true", help="Include amino acid composition ratios and total length in output")
-    parser.add_argument("-o", "--output", help="Output TSV file w/ header. If omitted, print to stdout w/ header.")
-    parser.add_argument("--no-header", action="store_true", help="Suppress header line in output")
+    parser = argparse.ArgumentParser(description=f"{ASTUR_LOGO}\n\nCompute ARSC from .faa/.faa.gz files", formatter_class=CustomFormatter)
+    parser.add_argument("-i", "--input_dir", help="Input file or directory")
+    parser.add_argument("input", nargs="?", help="Positional input: .faa/.faa.gz file or directory")
+    parser.add_argument("-p", "--per-sequence", action="store_true", help="Process each sequence individually")
+    parser.add_argument("-a", "--aa-composition", action="store_true", help="Include amino acid composition ratios")
+    parser.add_argument("-o", "--output", help="Output TSV file (default: stdout)")
+    parser.add_argument("--no-header", action="store_true", help="Suppress header line")
     parser.add_argument("-t", "--threads", default=1, type=int, help="Number of threads")
-    parser.add_argument("-d", "--decimal-places", default=6, type=int, help="Number of decimal places for floating point values")
-    parser.add_argument("--min-length", type=int, help="Minimum amino acid length (filter results)")
-    parser.add_argument("--max-length", type=int, help="Maximum amino acid length (filter results)")
-    parser.add_argument("-s", "--stats", action="store_true", help="Output summary statistics to stdout")
+    parser.add_argument("-d", "--decimal-places", default=6, type=int, help="Decimal places")
+    parser.add_argument("--min-length", type=int, help="Minimum sequence length")
+    parser.add_argument("--max-length", type=int, help="Maximum sequence length")
+    parser.add_argument("-s", "--stats", action="store_true", help="Output summary statistics to stderr")
     parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {__version__}")
-
-
 
     args = parser.parse_args()
 
-    # Allow either flag (-i/--input_dir) or positional input (not both)
-    if args.input_dir is not None and args.input is not None:
-        parser.error("cannot specify both positional input and -i/--input_dir; use one or the other")
-    if args.input_dir is None and args.input is not None:
-        args.input_dir = args.input
-    if args.input_dir is None:
+    # 入力パス
+    target_input = args.input_dir if args.input_dir else args.input
+    if not target_input:
         parser.error("missing input: provide a .faa/.faa.gz file or directory")
-
-    # Check if input is a directory
-    import os
-    is_dir = os.path.isdir(args.input_dir)
-
-    # --stats only works with directories
-    if args.stats and not is_dir:
-        parser.error("--stats can only be used with directory input (not single file)")
+    
+    if args.stats and not os.path.isdir(target_input):
+        parser.error("--stats can only be used with directory input")
 
     try:
-        items = list(collect_faa_files(args.input_dir))
+        items = list(collect_faa_files(target_input))
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -106,14 +97,14 @@ def main():
     print(f"Found {len(items)} files to process.", file=sys.stderr)
     print(f"Using {args.threads} threads.", file=sys.stderr)
 
-    # Multiprocessing
+    # 計算
     with Pool(args.threads) as pool:
         if args.per_sequence:
             results = pool.starmap(process_faa_auto, [(item, True) for item in items])
         else:
             results = pool.map(process_faa_auto, items)
 
-    # Filter by length
+    # フィルタリング
     filtered_results = []
     for r in results:
         if 'error' in r:
@@ -125,132 +116,91 @@ def main():
                 filtered_results.append(r)
         else:
             length = r.get('total_aa_length', 0)
-            if args.min_length is not None and length < args.min_length:
-                continue
-            if args.max_length is not None and length > args.max_length:
+            if (args.min_length is not None and length < args.min_length) or (args.max_length is not None and length > args.max_length):
                 continue
             filtered_results.append(r)
-
+    
     results = filtered_results
     print(f"After filtering: {len(results)} results.", file=sys.stderr)
 
-    # Calculate statistics if requested by --stats
-    stats_data = None
+    # 統計
     if args.stats:
-        valid_results = [r for r in results if 'error' not in r]
+        n_vals, c_vals, s_vals, mw_vals = [], [], [], []
+        for r in results:
+            if 'error' in r: continue
+            target_list = r['sequences'] if args.per_sequence else [r]
+            for data in target_list:
+                n_vals.append(data.get('N_ARSC', 0))
+                c_vals.append(data.get('C_ARSC', 0))
+                s_vals.append(data.get('S_ARSC', 0))
+                mw_vals.append(data.get('MW_ARSC', 0))
         
-        if valid_results:
-            n_values = [r['N_ARSC'] for r in valid_results]
-            c_values = [r['C_ARSC'] for r in valid_results]
-            s_values = [r['S_ARSC'] for r in valid_results]
-            mw_values = [r['MW_ARSC'] for r in valid_results]
-            
-            from statistics import mean, stdev
-            
-            stats_data = {
-                'N_ARSC': {
-                    'mean': mean(n_values),
-                    'stdev': stdev(n_values) if len(n_values) > 1 else 0,
-                    'min': min(n_values),
-                    'max': max(n_values)
-                },
-                'C_ARSC': {
-                    'mean': mean(c_values),
-                    'stdev': stdev(c_values) if len(c_values) > 1 else 0,
-                    'min': min(c_values),
-                    'max': max(c_values)
-                },
-                'S_ARSC': {
-                    'mean': mean(s_values),
-                    'stdev': stdev(s_values) if len(s_values) > 1 else 0,
-                    'min': min(s_values),
-                    'max': max(s_values)
-                },
-                'MW_ARSC': {
-                    'mean': mean(mw_values),
-                    'stdev': stdev(mw_values) if len(mw_values) > 1 else 0,
-                    'min': min(mw_values),
-                    'max': max(mw_values)
-                },
-                'count': len(valid_results)
-            }
-            
-            # Output statistics to stdout in a formatted table
+        if n_vals:
             print("\n" + "="*70, file=sys.stderr)
-            print("SUMMARY STATISTICS".center(70), file=sys.stderr)
+            label = "Per-Sequence" if args.per_sequence else "Per-File"
+            print(f"SUMMARY STATISTICS ({label})".center(70), file=sys.stderr)
             print("="*70, file=sys.stderr)
             print(f"{'Metric':<12} {'Mean':<16} {'Stdev':<16} {'Min':<16} {'Max':<16}", file=sys.stderr)
             print("-"*70, file=sys.stderr)
-            for metric in ['N_ARSC', 'C_ARSC', 'S_ARSC', 'MW_ARSC']:
-                s = stats_data[metric]
-                print(f"{metric:<12} {s['mean']:<16.{args.decimal_places}f} {s['stdev']:<16.{args.decimal_places}f} {s['min']:<16.{args.decimal_places}f} {s['max']:<16.{args.decimal_places}f}", file=sys.stderr)
+            for name, vals in [('N_ARSC', n_vals), ('C_ARSC', c_vals), ('S_ARSC', s_vals), ('MW_ARSC', mw_vals)]:
+                sd = stdev(vals) if len(vals) > 1 else 0
+                print(f"{name:<12} {mean(vals):<16.{args.decimal_places}f} {sd:<16.{args.decimal_places}f} {min(vals):<16.{args.decimal_places}f} {max(vals):<16.{args.decimal_places}f}", file=sys.stderr)
             print("-"*70, file=sys.stderr)
-            print(f"{'Count':<12} {stats_data['count']:<16}", file=sys.stderr)
+            print(f"{'Count':<12} {len(n_vals):<16}", file=sys.stderr)
             print("="*70 + "\n", file=sys.stderr)
 
-    # Output
+    # 出力
     decimal_fmt = f"{{:.{args.decimal_places}f}}"
+    out_handle = open(args.output, "w") if args.output else sys.stdout
+    aa_keys = sorted(aa_dictionary.keys())
 
-    if args.output:
-        with open(args.output, "w") as out:
+    try:
+        # ヘッダー
+        if not args.no_header:
+            h = ["query"]
+            if args.per_sequence:
+                h.append("sequence_id")
+            h.extend(["N_ARSC", "C_ARSC", "S_ARSC", "AvgResMW", "length" if args.per_sequence else "TotalLength"])
             if args.aa_composition:
-                # Build header with all amino acids
-                from ASTUR.core import aa_dictionary
-                aa_keys = sorted(aa_dictionary.keys())
-                # Write header unless --no-header is specified
-                if not args.no_header:
-                    header = "query\tN_ARSC\tC_ARSC\tS_ARSC\tAvgResMW\t" + "\t".join(aa_keys) + "\tTotalLength\n"
-                    out.write(header)
-                for r in results:
-                    if 'error' in r:
-                        continue
-                    aa_comp_values = [decimal_fmt.format(r['aa_composition'].get(aa, 0)) for aa in aa_keys]
-                    out.write(f"{r['genome']}\t{decimal_fmt.format(r['N_ARSC'])}\t{decimal_fmt.format(r['C_ARSC'])}\t{decimal_fmt.format(r['S_ARSC'])}\t{decimal_fmt.format(r['MW_ARSC'])}\t" + "\t".join(aa_comp_values) + f"\t{r['total_aa_length']}\n")
-            else:
-                # Write header unless --no-header is specified
-                if not args.no_header:
-                    out.write("query\tN_ARSC\tC_ARSC\tS_ARSC\tAvgResMW\n")
-                for r in results:
-                    if 'error' in r:
-                        continue
-                    out.write(f"{r['genome']}\t{decimal_fmt.format(r['N_ARSC'])}\t{decimal_fmt.format(r['C_ARSC'])}\t{decimal_fmt.format(r['S_ARSC'])}\t{decimal_fmt.format(r['MW_ARSC'])}\n")
-        print(f"Output written to {args.output}", file=sys.stderr)
-    else:
-        # stdout output with header
-        if args.aa_composition:
-            from ASTUR.core import aa_dictionary
-            aa_keys = sorted(aa_dictionary.keys())
-            # Print header unless --no-header is specified
-            if not args.no_header:
-                header = "query\tN_ARSC\tC_ARSC\tS_ARSC\tAvgResMW\t" + "\t".join(aa_keys) + "\tTotalLength"
-                print(header)
-            for r in results:
-                if 'error' in r:
-                    continue
-                aa_comp_values = [decimal_fmt.format(r['aa_composition'].get(aa, 0)) for aa in aa_keys]
-                print(f"{r['genome']}\t{decimal_fmt.format(r['N_ARSC'])}\t{decimal_fmt.format(r['C_ARSC'])}\t{decimal_fmt.format(r['S_ARSC'])}\t{decimal_fmt.format(r['MW_ARSC'])}\t" + "\t".join(aa_comp_values) + f"\t{r['total_aa_length']}")
-        else:
-            # Print header unless --no-header is specified
-            if not args.no_header:
-                print("query\tN_ARSC\tC_ARSC\tS_ARSC\tAvgResMW")
-            for r in results:
-                if 'error' in r:
-                    continue
-                print(f"{r['genome']}\t{decimal_fmt.format(r['N_ARSC'])}\t{decimal_fmt.format(r['C_ARSC'])}\t{decimal_fmt.format(r['S_ARSC'])}\t{decimal_fmt.format(r['MW_ARSC'])}")
-    if args.per_sequence:
-        # 配列ごとの出力
-        if not args.no_header:
-            print("query\tsequence_id\tN_ARSC\tC_ARSC\tS_ARSC\tAvgResMW\tlength")
-        for r in results:
-            for seq in r['sequences']:
-                print(f"{r['genome']}\t{seq['sequence_id']}\t{decimal_fmt.format(seq['N_ARSC'])}\t{decimal_fmt.format(seq['C_ARSC'])}\t{decimal_fmt.format(seq['S_ARSC'])}\t{decimal_fmt.format(seq['MW_ARSC'])}\t{seq['length']}")
-    else:
-        # ファイル全体の出力
-        if not args.no_header:
-            print("query\tN_ARSC\tC_ARSC\tS_ARSC\tAvgResMW")
-        for r in results:
-            print(f"{r['genome']}\t{decimal_fmt.format(r['N_ARSC'])}\t{decimal_fmt.format(r['C_ARSC'])}\t{decimal_fmt.format(r['S_ARSC'])}\t{decimal_fmt.format(r['MW_ARSC'])}")
+                h.extend(aa_keys)
+            out_handle.write("\t".join(h) + "\n")
 
+        # データ行
+        for r in results:
+            if 'error' in r: continue
+            
+            if args.per_sequence:
+                for seq in r.get('sequences', []):
+                    row = [r['genome'], seq['sequence_id']]
+                    row.extend([
+                        decimal_fmt.format(seq.get('N_ARSC', 0)),
+                        decimal_fmt.format(seq.get('C_ARSC', 0)),
+                        decimal_fmt.format(seq.get('S_ARSC', 0)),
+                        decimal_fmt.format(seq.get('MW_ARSC', 0)),
+                        str(seq.get('length', 0))
+                    ])
+                    if args.aa_composition:
+                        comp = seq.get('aa_composition', {})
+                        row.extend([decimal_fmt.format(comp.get(aa, 0)) for aa in aa_keys])
+                    out_handle.write("\t".join(row) + "\n")
+            else:
+                row = [r['genome']]
+                row.extend([
+                    decimal_fmt.format(r.get('N_ARSC', 0)),
+                    decimal_fmt.format(r.get('C_ARSC', 0)),
+                    decimal_fmt.format(r.get('S_ARSC', 0)),
+                    decimal_fmt.format(r.get('MW_ARSC', 0)),
+                    str(r.get('total_aa_length', 0))
+                ])
+                if args.aa_composition:
+                    comp = r.get('aa_composition', {})
+                    row.extend([decimal_fmt.format(comp.get(aa, 0)) for aa in aa_keys])
+                out_handle.write("\t".join(row) + "\n")
+
+    finally:
+        if args.output:
+            out_handle.close()
+            print(f"Output written to {args.output}", file=sys.stderr)
 
 if __name__ == "__main__":
     main()
