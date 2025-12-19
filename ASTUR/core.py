@@ -101,7 +101,7 @@ def process_faa(faa_source, name=None, per_sequence=False):
         if per_sequence:
             results = []
             for record in SeqIO.parse(faa_source, "fasta-blast"):
-                seq = str(record.seq).replace("*", "")
+                seq = str(record.seq).upper().replace("*", "")
                 seq_counts = Counter(seq)
                 seq_length = sum(seq_counts.values())
                 N, C, S, MW = compute_ARSC_extended_counts(seq_counts, aa_dictionary)
@@ -118,7 +118,7 @@ def process_faa(faa_source, name=None, per_sequence=False):
         else:
             counts = Counter()
             for record in SeqIO.parse(faa_source, "fasta-blast"):
-                seq = str(record.seq).replace("*", "")
+                seq = str(record.seq).upper().replace("*", "")
                 counts.update(seq)
 
             total_aa_length = sum(counts.values())
