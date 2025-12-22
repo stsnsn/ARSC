@@ -59,7 +59,7 @@ arsc <FASTA_FILE (.faa / .faa.gz) or input_dir/>
 
 - output format options
     - `-a` or `--aa-composition`   : Include amino acid composition ratios in output (default: False)
-    - `-d` or `--decimal-places` N : Number of decimal places for floating point values (default: 6)
+    - `-d` or `--decimal-places` N : Number of decimal places (default: 6)
     - `--no-header`    : Suppress header line in output (default: False)
     - `--max-length` N : number of maximal amino acid length (default: None)
     - `--min-length` N : number of minimal amino acid length (default: None)
