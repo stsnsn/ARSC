@@ -53,7 +53,7 @@ def main():
     args = parser.parse_args()
 
     # 入力パス
-    target_input = args.input_dir if args.input_dir else args.input
+    target_input = args.input
     if not target_input:
         parser.error("missing input: provide a .faa/.faa.gz file or directory")
 
