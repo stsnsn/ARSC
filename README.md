@@ -46,7 +46,7 @@ pip install arsc
 ## Usage
 
 ```bash
-arsc <FASTA_FILE (.faa / .faa.gz) or input_dir/>
+arsc <FASTA_FILE (.faa/.faa.gz) or input_dir/>
 ```
 
 - `-h` or `--help`    : show help message
@@ -91,9 +91,9 @@ arsc test_data/ -t 3 -as -o ARSC_output_full.tsv
 arsc test_data/ -t 3 --no-header | sort -k2,2nr
 ```
 
-#### 5. Process each sequence individually instead of the entire file and filter results by amino acid length > 130.
+#### 5. Process each sequence individually instead of the entire file and filter results by amino acid length > 120.
 ```bash
-arsc test_data/ -t 3 --min-length 130 -p
+arsc test_data/ -t 3 --min-length 120 -p
 ```
 
 ### Input requirements
