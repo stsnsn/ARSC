@@ -52,7 +52,7 @@ arsc <FASTA_FILE or input_dir/>
 - `-h` or `--help`    : show help message
 - `-v` or `--version` : show version
 
-- `-i` or `--input_dir` <input_dir/> : input file/directory path（`astur <input>` == `astur -i <input>` ）
+- `-i` or `--input_dir` <input_dir/> : input file/directory path（`arsc <input>` == `arsc -i <input>` ）
 - `-o` or `--output`   <output_dir/> : output TSV file name (optional)
 - `-t` or `--threads` N : number of threads (default: 1)
 - `-s` or `--stats`     : output summary statistics to stderr (default: False)
