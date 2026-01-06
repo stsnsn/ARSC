@@ -5,7 +5,7 @@ __email__ = 'satoshi-nishino@g.ecc.u-tokyo.ac.jp'
 
 
 """
-This script was created to compute the N/C-ARSC metrics as described in the following publication:
+This script was created to compute the N/C/S-ARSC metrics as described in the following publication:
     Mende et al., Nature Microbiology, 2017 https://doi.org/10.1038/s41564-017-0008-3
 
 Original citations for calculation metrics in Mende et al. 2017:
@@ -66,7 +66,7 @@ def main():
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"ASTUR Version: {__version__}", file=sys.stderr)
+    print(f"quickARSC Version: {__version__}", file=sys.stderr)
     print(f"Found {len(items)} files to process.", file=sys.stderr)
     print(f"Using {args.threads} threads.", file=sys.stderr)
 
