@@ -19,7 +19,7 @@ import os
 from multiprocessing import Pool
 from statistics import mean, stdev
 from ARSC import __version__
-from ARSC.utils import collect_faa_files, process_faa_auto
+from ARSC.utils import collect_faa_files, process_faa_auto, collect_fna_files, process_fna_pipeline
 from ARSC.core import aa_dictionary
 
 quickARSC_LOGO = """
@@ -48,6 +48,7 @@ def main():
     parser.add_argument("--min-length", type=int, help="Minimum sequence length")
     parser.add_argument("--max-length", type=int, help="Maximum sequence length")
     parser.add_argument("-s", "--stats", action="store_true", help="Output summary statistics to stderr")
+    parser.add_argument("-n", "--nucleotide", action="store_true", help="Nucleotide mode for fna/fna.gz (please install Prodigal)")
     parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {__version__}")
 
     args = parser.parse_args()
@@ -60,11 +61,12 @@ def main():
     if args.stats and not os.path.isdir(target_input):
         parser.error("--stats can only be used with directory input")
 
-    try:
-        items = list(collect_faa_files(target_input))
-    except ValueError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+    if args.nucleotide:
+        items = list(collect_fna_files(args.input))
+        target_func = process_fna_pipeline
+    else:
+        items = list(collect_faa_files(args.input))
+        target_func = process_faa_auto
 
     print(f"quickARSC Version: {__version__}", file=sys.stderr)
     print(f"Found {len(items)} files to process.", file=sys.stderr)
@@ -73,16 +75,16 @@ def main():
     # 計算
     with Pool(args.threads) as pool:
         if args.per_sequence:
-            results = pool.starmap(process_faa_auto, [(item, True) for item in items])
+            results = pool.starmap(target_func, [(item, True) for item in items])
         else:
-            results = pool.map(process_faa_auto, items)
+            results = pool.map(target_func, items)
 
     # フィルタリング
     filtered_results = []
     for r in results:
         if 'error' in r:
-            filtered_results.append(r)
-            continue
+            print(f"Skipping genome due to error: {r['error']}", file=sys.stderr)
+            continue  # エラーがある場合は結果に含めない
         if args.per_sequence:
             r['sequences'] = [seq for seq in r['sequences'] if (args.min_length is None or seq['length'] >= args.min_length) and (args.max_length is None or seq['length'] <= args.max_length)]
             if r['sequences']:
@@ -128,9 +130,12 @@ def main():
     aa_keys = sorted(aa_dictionary.keys())
 
     try:
-        # ヘッダー
         if not args.no_header:
             h = ["query"]
+            # -n が指定された場合に GC, base_ATGC を追加
+            if args.nucleotide:
+                h.extend(["genomic_GC", "base_A", "base_T", "base_G", "base_C"])
+            # -p が指定された場合に sequence_id を追加
             if args.per_sequence:
                 h.append("sequence_id")
             h.extend(["N_ARSC", "C_ARSC", "S_ARSC", "AvgResMW", "length" if args.per_sequence else "TotalLength"])
@@ -141,28 +146,54 @@ def main():
         # データ行
         for r in results:
             if 'error' in r: continue
-            
+
+            # -p
             if args.per_sequence:
                 for seq in r.get('sequences', []):
-                    row = [r['genome'], seq['sequence_id']]
+                    row = [r['genome']]
+
+                    if args.nucleotide:
+                        row.extend([
+                            decimal_fmt.format(r.get('GC', 0)),
+                            decimal_fmt.format(r.get('base_A', 0)),
+                            decimal_fmt.format(r.get('base_T', 0)),
+                            decimal_fmt.format(r.get('base_G', 0)),
+                            decimal_fmt.format(r.get('base_C', 0))
+                        ])
+
+                    row.append(seq['sequence_id'])
+
                     row.extend([
-                        decimal_fmt.format(seq.get('N_ARSC', 0)),
-                        decimal_fmt.format(seq.get('C_ARSC', 0)),
-                        decimal_fmt.format(seq.get('S_ARSC', 0)),
-                        decimal_fmt.format(seq.get('MW_ARSC', 0)),
+                        decimal_fmt.format(seq.get('N_ARSC') or 0),
+                        decimal_fmt.format(seq.get('C_ARSC') or 0),
+                        decimal_fmt.format(seq.get('S_ARSC') or 0),
+                        decimal_fmt.format(seq.get('MW_ARSC') or 0),
                         str(seq.get('length', 0))
                     ])
+
                     if args.aa_composition:
                         comp = seq.get('aa_composition', {})
                         row.extend([decimal_fmt.format(comp.get(aa, 0)) for aa in aa_keys])
+
                     out_handle.write("\t".join(row) + "\n")
+
+            # 通常
             else:
                 row = [r['genome']]
+                # -n
+                if args.nucleotide:
+                    row.extend([
+                        decimal_fmt.format(r.get('GC', 0)),
+                        decimal_fmt.format(r.get('base_A', 0)),
+                        decimal_fmt.format(r.get('base_T', 0)),
+                        decimal_fmt.format(r.get('base_G', 0)),
+                        decimal_fmt.format(r.get('base_C', 0))
+                    ])
                 row.extend([
-                    decimal_fmt.format(r.get('N_ARSC', 0)),
-                    decimal_fmt.format(r.get('C_ARSC', 0)),
-                    decimal_fmt.format(r.get('S_ARSC', 0)),
-                    decimal_fmt.format(r.get('MW_ARSC', 0)),
+                    decimal_fmt.format(r.get('N_ARSC') or 0),
+                    decimal_fmt.format(r.get('C_ARSC') or 0),
+                    decimal_fmt.format(r.get('S_ARSC') or 0),
+                    decimal_fmt.format(r.get('MW_ARSC') or 0),
                     str(r.get('total_aa_length', 0))
                 ])
                 if args.aa_composition:

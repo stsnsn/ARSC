@@ -100,13 +100,18 @@ def process_faa(faa_source, name=None, per_sequence=False):
 
         if per_sequence:
             results = []
-            for record in SeqIO.parse(faa_source, "fasta-blast"):
+            # enumerateを使って、1番から順に番号を振る
+            for i, record in enumerate(SeqIO.parse(faa_source, "fasta-blast"), 1):
                 seq = str(record.seq).upper().replace("*", "")
                 seq_counts = Counter(seq)
                 seq_length = sum(seq_counts.values())
+
+                # record.idに頼らず、ゲノム名 + 通し番号でIDを作る
+                display_id = f"{genome_name}_{i}"
+
                 N, C, S, MW = compute_ARSC_extended_counts(seq_counts, aa_dictionary)
                 results.append({
-                    "sequence_id": record.id,
+                    "sequence_id": display_id,
                     "length": seq_length,
                     "N_ARSC": N,
                     "C_ARSC": C,

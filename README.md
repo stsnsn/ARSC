@@ -52,10 +52,11 @@ arsc <FASTA_FILE (.faa/.faa.gz) or input_dir/>
 - `-h` or `--help`    : show help message
 - `-v` or `--version` : show version
 
+
 - `-o` or `--output`   <output> : output TSV file name (optional)
 - `-t` or `--threads` N : number of threads (default: 1)
 - `-s` or `--stats`     : output summary statistics to stderr (default: False)
-- `-p`, `--per-sequence`: process each sequence individually instead of the entire file
+- `-p` or `--per-sequence`: process each sequence individually instead of the entire file
 
 - output format options
     - `-a` or `--aa-composition`   : Include amino acid composition ratios in output (default: False)
@@ -63,6 +64,8 @@ arsc <FASTA_FILE (.faa/.faa.gz) or input_dir/>
     - `--no-header`    : Suppress header line in output (default: False)
     - `--max-length` N : number of maximal amino acid length (default: None)
     - `--min-length` N : number of minimal amino acid length (default: None)
+
+- `-n` or `--nucleotide` : calculate GC content and ARSC values from nucleotide files (fna, fna.gz, fa, fa.gz, fasta, fasta.gz). Requires **Prodigal** to be installed in your PATH for gene prediction.
 
 
 ### Example
@@ -96,6 +99,18 @@ arsc test_data/ -t 3 --no-header | sort -k2,2nr
 arsc test_data/ -t 3 --min-length 65 -p
 ```
 
+#### 6. Process nucleotide files (fna/fna.gz) and show base compositions and ARSC values. (Requires Prodigal)
+```bash
+arsc -n test_data/ -t 2 -d 2
+```
+
+| query | genomic_GC | base_A | base_T | base_G | base_C | N_ARSC | C_ARSC | S_ARSC | AvgResMW | TotalLength |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| pSAR11 | 36.45 | 31.59 | 31.95 | 16.37 | 20.09 | 0.46 | 3.12 | 0.02 | 133.91 | 830 |
+| pSAR12 | 36.45 | 31.59 | 31.95 | 16.37 | 20.09 | 0.46 | 3.12 | 0.02 | 133.91 | 830 |
+
+---
+
 ### Input requirements
 
 - Input directory must contain one or more amino-acid fasta (`*.faa` or `*.faa.gz`) files
@@ -113,9 +128,12 @@ Default format columns: query, N_ARSC, C_ARSC, S_ARSC, AvgResMW, TotalLenghth <b
 - TotalLenghth — Total amino acid length.
 
 ### Dependencies
-- Python >= 3.8
-- Biopython >= 1.79
+- **Python** >= 3.8
+- **Biopython** >= 1.79
 
+#### Optional Dependencies
+- **Prodigal** >= 2.6.3: Required only for nucleotide mode to perform gene prediction.
+    - Must be installed and available in your system PATH for `-n` / `--nucleotide` option.
 ---
 
 ## Citation
